@@ -9,8 +9,9 @@ import (
 )
 
 func main() {
+	log.Println("Starting server...")
 	r := mux.NewRouter()
 	r.HandleFunc("/register", view.RegisterView).Methods("POST")
 	r.HandleFunc("/login", view.LoginView).Methods("POST")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	log.Fatal(http.ListenAndServe("127.0.0.1:8080", r))
 }

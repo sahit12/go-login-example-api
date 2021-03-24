@@ -16,6 +16,7 @@ import (
 
 func RegisterView(response http.ResponseWriter, request *http.Request) {
 	response.Header().Add("Content-Type", "application/json")
+
 	var user models.User
 	json.NewDecoder(request.Body).Decode(&user)
 	fmt.Println(user)
