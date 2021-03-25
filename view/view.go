@@ -5,7 +5,7 @@ import (
 	"GO-GITHUB/models"
 	"context"
 	"encoding/json"
-	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"time"
@@ -15,11 +15,23 @@ import (
 )
 
 func RegisterView(response http.ResponseWriter, request *http.Request) {
-	response.Header().Add("Content-Type", "application/json")
+	// response.Header().Add("Content-Type", "application/json")
+
+	tmpl := template.Must(template.ParseFiles("templates/register.html"))
+	if request.Method != "POST" {
+		tmpl.Execute(response, nil)
+		return
+	}
 
 	var user models.User
-	json.NewDecoder(request.Body).Decode(&user)
-	fmt.Println(user)
+	//json.NewDecoder(request.Body).Decode(&user)
+	user = models.User{
+		Username:  request.FormValue("username"),
+		Firstname: request.FormValue("firstname"),
+		Lastname:  request.FormValue("lastname"),
+		Email:     request.FormValue("email"),
+		Password:  request.FormValue("password"),
+	}
 
 	coll, err := db.GetDBCollection()
 	if err != nil {
@@ -37,25 +49,26 @@ func RegisterView(response http.ResponseWriter, request *http.Request) {
 		if err.Error() == "mongo: no documents in result" {
 			hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
 			if err != nil {
-				message := "Error While Hashing Password, Try Again"
-				json.NewEncoder(response).Encode(message)
+				//message := "Error While Hashing Password, Try Again"
+				//json.NewEncoder(response).Encode(message)
 				return
 			}
 			user.Password = string(hash)
 
 			_, err = coll.InsertOne(ctx, user)
 			if err != nil {
-				message := "Error While Creating User, Try Again"
-				json.NewEncoder(response).Encode(message)
+				//message := "Error While Creating User, Try Again"
+				//json.NewEncoder(response).Encode(message)
 				return
 			}
-			message := "Registration Successful"
-			json.NewEncoder(response).Encode(message)
+			//message := "Registration Successful"
+			//json.NewEncoder(response).Encode(message)
+			tmpl.Execute(response, struct{ Success bool }{true})
 			return
 		}
 
-		message := err.Error()
-		json.NewEncoder(response).Encode(message)
+		// message := err.Error()
+		//json.NewEncoder(response).Encode(message)
 		return
 	}
 
@@ -65,9 +78,19 @@ func RegisterView(response http.ResponseWriter, request *http.Request) {
 }
 
 func LoginView(response http.ResponseWriter, request *http.Request) {
-	response.Header().Add("Content-Type", "application/json")
+	// response.Header().Add("Content-Type", "application/json")
+
+	tmpl := template.Must(template.ParseFiles("templates/login.html"))
+	if request.Method != "POST" {
+		tmpl.Execute(response, nil)
+		return
+	}
 	var user models.User
-	json.NewDecoder(request.Body).Decode(&user)
+	// json.NewDecoder(request.Body).Decode(&user)
+	user = models.User{
+		Username: request.FormValue("username"),
+		Password: request.FormValue("password"),
+	}
 
 	coll, err := db.GetDBCollection()
 	if err != nil {
@@ -94,6 +117,7 @@ func LoginView(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	message := "Login Successful"
-	json.NewEncoder(response).Encode(message)
+	// message := "Login Successful"
+	// json.NewEncoder(response).Encode(message)
+	tmpl.Execute(response, struct{ Success bool }{true})
 }
